@@ -115,6 +115,18 @@ def print_html_report(covdata, output_file, options):
     )
     data['DIRECTORY'] = ''
 
+    functionTotal = 0
+    functionCovered = 0
+    for key in covdata.keys():
+        (total, covered, percent) = covdata[key].function_coverage()
+        functionTotal += total
+        functionCovered += covered
+    data['FUNCTIONS_EXEC'] = str(functionCovered)
+    data['FUNCTIONS_TOTAL'] = str(functionTotal)
+    coverage = calculate_coverage(functionCovered, functionTotal, nan_value=None)
+    data['FUNCTIONS_COVERAGE'] = '-' if coverage is None else str(coverage)
+    data['FUNCTIONS_COLOR'] = coverage_to_color(coverage, medium_threshold, high_threshold)
+
     branchTotal = 0
     branchCovered = 0
     for key in covdata.keys():
@@ -178,15 +190,20 @@ def print_html_report(covdata, output_file, options):
         cdata = covdata[f]  # type: FileCoverage
         class_lines = 0
         class_hits = 0
+        class_functions = 0
+        class_functions_hits = 0
         class_branches = 0
         class_branch_hits = 0
         class_lines, class_hits, _ = cdata.line_coverage()
+        class_functions, class_functions_hits, _ = cdata.function_coverage()
         b_total, b_hits, _ = cdata.branch_coverage()
         class_branch_hits += b_hits
         class_branches += b_total
 
         lines_covered = calculate_coverage(
             class_hits, class_lines, nan_value=100.0)
+        functions_covered = calculate_coverage(
+            class_functions_hits, class_functions, nan_value=100.0)
         branches_covered = calculate_coverage(
             class_branch_hits, class_branches, nan_value=None)
 
@@ -199,6 +216,9 @@ def print_html_report(covdata, output_file, options):
             LinesExec=class_hits,
             LinesTotal=class_lines,
             LinesCoverage=lines_covered,
+            FunctionsExec=class_functions_hits,
+            FunctionsTotal=class_functions,
+            FunctionsCoverage=functions_covered,
             BranchesExec=class_branch_hits,
             BranchesTotal=class_branches,
             BranchesCoverage=branches_covered
@@ -229,6 +249,12 @@ def print_html_report(covdata, output_file, options):
 
         data['FILENAME'] = cdata_fname[f]
         data['ROWS'] = ''
+
+        functionTotal, functionCovered, coverage = cdata.function_coverage()
+        data['FUNCTIONS_EXEC'] = str(functionCovered)
+        data['FUNCTIONS_TOTAL'] = str(functionTotal)
+        data['FUNCTIONS_COVERAGE'] = '-' if coverage is None else str(coverage)
+        data['FUNCTIONS_COLOR'] = coverage_to_color(coverage, medium_threshold, high_threshold)
 
         branchTotal, branchCovered, coverage = cdata.branch_coverage()
         data['BRANCHES_EXEC'] = str(branchCovered)

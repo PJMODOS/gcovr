@@ -21,8 +21,8 @@
       <td width="100%">
         <table cellpadding="1" border="0" width="100%">
           <tr>
-            <td width="10%" class="headerName">Directory:</td>
-            <td width="35%" class="headerValue">{{DIRECTORY}}</td>
+            <td width="10%"></td>
+            <td width="35%"></td>
             <td width="5%"></td>
             <td width="15%"></td>
             <td width="10%" class="headerValue" style="text-align:right;">Exec</td>
@@ -30,13 +30,22 @@
             <td width="15%" class="headerValue" style="text-align:right;">Coverage</td>
           </tr>
           <tr>
-            <td class="headerName">File:</td>
-            <td class="headerValue">{{FILENAME}}</td>
+            <td class="headerName">Directory:</td>
+            <td class="headerValue">{{DIRECTORY}}</td>
             <td></td>
             <td class="headerName">Lines:</td>
             <td class="headerTableEntry">{{LINES_EXEC}}</td>
             <td class="headerTableEntry">{{LINES_TOTAL}}</td>
             <td class="headerTableEntry" style="background-color:{{LINES_COLOR}}">{{LINES_COVERAGE}} %</td>
+          </tr>
+          <tr>
+            <td class="headerName">File:</td>
+            <td class="headerValue">{{FILENAME}}</td>
+            <td></td>
+            <td class="headerName">Functions:</td>
+            <td class="headerTableEntry">{{FUNCTIONS_EXEC}}</td>
+            <td class="headerTableEntry">{{FUNCTIONS_TOTAL}}</td>
+            <td class="headerTableEntry" style="background-color:{{FUNCTIONS_COLOR}}">{{FUNCTIONS_COVERAGE}} %</td>
           </tr>
           <tr>
             <td class="headerName">Date:</td>
