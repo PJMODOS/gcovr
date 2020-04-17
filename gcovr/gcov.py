@@ -6,6 +6,7 @@
 # Copyright 2013 Sandia Corporation
 # This software is distributed under the BSD license.
 
+import cpp_demangle
 import os
 import re
 import subprocess
@@ -353,6 +354,44 @@ class GcovParser(object):
             return True
 
         if line.startswith('function '):
+            # function tags look like:
+            #   function X called 0 returned 0% blocks executed 0%
+            #   function X Y called 0 returned 0% blocks executed 0%
+            #   function X Y Z called 0 returned 0% blocks executed 0%
+            #   function X Y Z ... called 0 returned 0% blocks executed 0%
+            # where the percentage should usually be a count.
+            # we could also use a regex: "^function\s+(.+)\s+called\s+(\d+)\s+"
+
+            fields = line.split()  # e.g. "function X Y Z called 0 returned 0% blocks executed 0%"
+            assert len(fields) >= 9, \
+                "Unclear function tag format: {}".format(line)
+
+            # We take all fields excepting the first and the last 7
+            function_name = ' '.join(fields[1:len(fields) - 7])
+            function_call_count = int(fields[len(fields) - 6])
+
+            # special names for construction/destruction of static objects will be ignored
+            # "__tcf_0", "__static...", "_GLOBAL..."
+            if function_name.startswith("__") or function_name.startswith("_GLOBAL__sub_I__"):
+                self.logger.verbose_msg(
+                    "Ignoring Symbol {func_name} in line {line} "
+                    "in file {file_name}", func_name=fields[1],
+                    line=self.lineno, file_name=self.fname)
+                return True
+
+            # modern GCOV versions can demangle the C++ names, but just in case, try to demangle it on our own.
+            try:
+                function_name = cpp_demangle.demangle(function_name)
+            except ValueError:
+                self.logger.verbose_msg(
+                    "Could not demangle name {func_name} in line {line} "
+                    "in file {file_name}", func_name=function_name,
+                    line=self.lineno, file_name=self.fname)
+
+            function_cov = self.coverage.function(function_name)
+            function_cov.count += function_call_count
+            self.coverage.line(self.lineno).add_function(function_cov)
+
             return True
 
         if line.startswith('call '):
@@ -635,6 +674,7 @@ def run_gcov_and_process_files(
     # it probably includes extra arguments.
     cmd = options.gcov_cmd.split(' ') + [
         abs_filename,
+#        "--demangled-names", #only modern versions of gcov support name demandling
         "--branch-counts", "--branch-probabilities", "--preserve-paths",
         '--object-directory', os.path.dirname(abs_filename),
     ]
