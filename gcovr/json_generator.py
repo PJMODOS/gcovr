@@ -14,7 +14,7 @@ from .utils import presentable_filename, Logger
 from .coverage import FileCoverage
 
 
-JSON_FORMAT_VERSION = 0.1
+JSON_FORMAT_VERSION = 0.2
 PRETTY_JSON_INDENT = 4
 
 
@@ -92,6 +92,7 @@ def _json_from_lines(lines):
 def _json_from_line(line):
     json_line = {}
     json_line['branches'] = _json_from_branches(line.branches)
+    json_line['functions'] = _json_from_functions(line.functions)
     json_line['count'] = line.count
     json_line['line_number'] = line.lineno
     json_line['gcovr/noncode'] = line.noncode
@@ -109,6 +110,19 @@ def _json_from_branch(branch):
     json_branch['fallthrough'] = bool(branch.fallthrough)
     json_branch['throw'] = bool(branch.throw)
     return json_branch
+
+
+def _json_from_functions(functions):
+    json_functions = [_json_from_function(functions[name]) for name in sorted(functions)]
+    return json_functions
+
+
+def _json_from_function(function):
+    json_function = {}
+    if function:
+        json_function['name'] = function.name
+        json_function['count'] = function.count
+    return json_function
 
 
 def _lines_from_json(file, json_lines):
